@@ -23,7 +23,6 @@ internal object PlaceMapper {
     if (has("id")) place.id?.let { m.putString("id", it) }
     if (has("displayName")) place.displayName?.let { m.putString("displayName", it) }
     if (has("formattedAddress")) place.formattedAddress?.let { m.putString("formattedAddress", it) }
-    if (has("shortFormattedAddress")) place.shortFormattedAddress?.let { m.putString("shortFormattedAddress", it) }
     if (has("addressComponents")) place.addressComponents?.asList()?.let {
       m.putArray("addressComponents", addressComponentsArray(it))
     }
@@ -35,8 +34,6 @@ internal object PlaceMapper {
       for (t in it) arr.pushString(t)
       m.putArray("types", arr)
     }
-    if (has("primaryType")) place.primaryType?.let { m.putString("primaryType", it) }
-    if (has("primaryTypeDisplayName")) place.primaryTypeDisplayName?.let { m.putString("primaryTypeDisplayName", it) }
     if (has("businessStatus")) place.businessStatus?.let { m.putString("businessStatus", it.name) }
     if (has("rating")) place.rating?.let { m.putDouble("rating", it) }
     if (has("userRatingCount")) place.userRatingCount?.let { m.putInt("userRatingCount", it) }
@@ -44,9 +41,10 @@ internal object PlaceMapper {
     if (has("websiteUri")) place.websiteUri?.toString()?.let { m.putString("websiteUri", it) }
     if (has("googleMapsUri")) place.googleMapsUri?.toString()?.let { m.putString("googleMapsUri", it) }
     if (has("iconMaskUrl")) place.iconMaskUrl?.let { m.putString("iconMaskUrl", it) }
-    if (has("iconBackgroundColor")) place.iconBackgroundColor?.let { m.putInt("iconBackgroundColor", it) }
+    if (has("iconBackgroundColor")) place.iconBackgroundColor?.let {
+      m.putString("iconBackgroundColor", String.format("#%06X", 0xFFFFFF and it))
+    }
     if (has("internationalPhoneNumber")) place.internationalPhoneNumber?.let { m.putString("internationalPhoneNumber", it) }
-    if (has("nationalPhoneNumber")) place.nationalPhoneNumber?.let { m.putString("nationalPhoneNumber", it) }
     if (has("utcOffsetMinutes")) place.utcOffsetMinutes?.let { m.putInt("utcOffsetMinutes", it) }
     if (has("openingHours")) place.openingHours?.let { m.putMap("openingHours", openingHoursMap(it)) }
     if (has("currentOpeningHours")) place.currentOpeningHours?.let {
@@ -54,9 +52,6 @@ internal object PlaceMapper {
     }
     if (has("secondaryOpeningHours")) place.secondaryOpeningHours?.let {
       m.putArray("secondaryOpeningHours", openingHoursArray(it))
-    }
-    if (has("currentSecondaryOpeningHours")) place.currentSecondaryOpeningHours?.let {
-      m.putArray("currentSecondaryOpeningHours", openingHoursArray(it))
     }
     if (has("editorialSummary")) place.editorialSummary?.let { m.putString("editorialSummary", it) }
     if (has("reviews")) place.reviews?.let { m.putArray("reviews", reviewsArray(it)) }
@@ -246,8 +241,6 @@ internal object PlaceMapper {
       r.text?.let { m.putString("text", it) }
       r.originalText?.let { m.putString("originalText", it) }
       r.rating?.let { m.putDouble("rating", it) }
-      r.publishTime?.let { m.putString("publishTime", it) }
-      r.relativePublishTimeDescription?.let { m.putString("relativePublishTimeDescription", it) }
       r.authorAttribution?.let { aa ->
         val am = Arguments.createMap()
         aa.name?.let { am.putString("displayName", it) }

@@ -9,10 +9,10 @@
   return @{ @"latitude": @(c.latitude), @"longitude": @(c.longitude) };
 }
 
-+ (NSNumber *)tribool:(GMSPlaceBooleanPlaceAttribute)v {
++ (NSNumber *)tribool:(GMSBooleanPlaceAttribute)v {
   switch (v) {
-    case GMSPlaceBooleanPlaceAttributeTrue: return @YES;
-    case GMSPlaceBooleanPlaceAttributeFalse: return @NO;
+    case GMSBooleanPlaceAttributeTrue: return @YES;
+    case GMSBooleanPlaceAttributeFalse: return @NO;
     default: return nil;
   }
 }
@@ -28,11 +28,11 @@
 
 + (NSString *)priceLevelName:(GMSPlacesPriceLevel)p {
   switch (p) {
-    case GMSPlacesPriceLevelFree: return @"FREE";
-    case GMSPlacesPriceLevelCheap: return @"INEXPENSIVE";
-    case GMSPlacesPriceLevelMedium: return @"MODERATE";
-    case GMSPlacesPriceLevelHigh: return @"EXPENSIVE";
-    case GMSPlacesPriceLevelExpensive: return @"VERY_EXPENSIVE";
+    case kGMSPlacesPriceLevelFree: return @"FREE";
+    case kGMSPlacesPriceLevelCheap: return @"INEXPENSIVE";
+    case kGMSPlacesPriceLevelMedium: return @"MODERATE";
+    case kGMSPlacesPriceLevelHigh: return @"EXPENSIVE";
+    case kGMSPlacesPriceLevelExpensive: return @"VERY_EXPENSIVE";
     default: return @"MODERATE";
   }
 }
@@ -60,7 +60,7 @@
   return m;
 }
 
-+ (NSDictionary *)timeOfWeekDict:(GMSTimeOfWeek *)t {
++ (NSDictionary *)timeOfWeekDict:(GMSEvent *)t {
   return @{
     @"day": @(t.day),
     @"hour": @(t.time.hour),
@@ -87,10 +87,6 @@
   if (r.text) m[@"text"] = r.text;
   if (r.originalText) m[@"originalText"] = r.originalText;
   m[@"rating"] = @(r.rating);
-  if (r.publishTime) m[@"publishTime"] = @(r.publishTime.timeIntervalSince1970 * 1000);
-  if (r.relativePublishTimeDescription) {
-    m[@"relativePublishTimeDescription"] = r.relativePublishTimeDescription;
-  }
   if (r.authorAttribution) {
     NSMutableDictionary *aa = [NSMutableDictionary new];
     if (r.authorAttribution.name) aa[@"displayName"] = r.authorAttribution.name;
@@ -104,7 +100,7 @@
 + (void)addBool:(NSMutableDictionary *)m
             key:(NSString *)key
        requested:(NSSet *)requested
-          value:(GMSPlaceBooleanPlaceAttribute)v {
+          value:(GMSBooleanPlaceAttribute)v {
   if (![requested containsObject:key]) return;
   NSNumber *n = [self tribool:v];
   if (n != nil) m[key] = n;
@@ -118,7 +114,6 @@
   PUT_IF(@"id", place.placeID);
   PUT_IF(@"displayName", place.name);
   PUT_IF(@"formattedAddress", place.formattedAddress);
-  PUT_IF(@"shortFormattedAddress", place.shortFormattedAddress);
 
   if (HAS(@"addressComponents") && place.addressComponents) {
     NSMutableArray *arr = [NSMutableArray new];
@@ -142,26 +137,26 @@
   if (HAS(@"types") && place.types) {
     m[@"types"] = place.types;
   }
-  PUT_IF(@"primaryType", place.primaryType);
-  PUT_IF(@"primaryTypeDisplayName", place.primaryTypeDisplayName);
   if (HAS(@"businessStatus")) {
     NSString *s = [self businessStatusName:place.businessStatus];
     if (s != nil) m[@"businessStatus"] = s;
   }
   if (HAS(@"rating") && place.rating > 0) m[@"rating"] = @(place.rating);
   if (HAS(@"userRatingCount")) m[@"userRatingCount"] = @(place.userRatingsTotal);
-  if (HAS(@"priceLevel") && place.priceLevel != GMSPlacesPriceLevelUnknown) {
+  if (HAS(@"priceLevel") && place.priceLevel != kGMSPlacesPriceLevelUnknown) {
     m[@"priceLevel"] = [self priceLevelName:place.priceLevel];
   }
   if (HAS(@"websiteUri") && place.website) m[@"websiteUri"] = place.website.absoluteString;
-  if (HAS(@"googleMapsUri") && place.googleMapsURI) m[@"googleMapsUri"] = place.googleMapsURI.absoluteString;
+  if (HAS(@"googleMapsUri") && place.googleMapsLinks.placeURL) {
+    m[@"googleMapsUri"] = place.googleMapsLinks.placeURL.absoluteString;
+  }
   if (HAS(@"iconMaskUrl") && place.iconImageURL) m[@"iconMaskUrl"] = place.iconImageURL.absoluteString;
   if (HAS(@"iconBackgroundColor")) {
     NSString *hex = [self hexFromColor:place.iconBackgroundColor];
     if (hex) m[@"iconBackgroundColor"] = hex;
   }
-  PUT_IF(@"internationalPhoneNumber", place.internationalPhoneNumber);
-  PUT_IF(@"nationalPhoneNumber", place.phoneNumber);
+  // GooglePlaces iOS exposes a single phone number in international format.
+  PUT_IF(@"internationalPhoneNumber", place.phoneNumber);
   if (HAS(@"utcOffsetMinutes") && place.UTCOffsetMinutes) {
     m[@"utcOffsetMinutes"] = place.UTCOffsetMinutes;
   }
@@ -177,13 +172,6 @@
       [arr addObject:[self openingHoursDict:h]];
     }
     m[@"secondaryOpeningHours"] = arr;
-  }
-  if (HAS(@"currentSecondaryOpeningHours") && place.currentSecondaryOpeningHours) {
-    NSMutableArray *arr = [NSMutableArray new];
-    for (GMSOpeningHours *h in place.currentSecondaryOpeningHours) {
-      [arr addObject:[self openingHoursDict:h]];
-    }
-    m[@"currentSecondaryOpeningHours"] = arr;
   }
   PUT_IF(@"editorialSummary", place.editorialSummary);
   if (HAS(@"reviews") && place.reviews) {
@@ -250,7 +238,7 @@
   }
   if (HAS(@"fuelOptions") && place.fuelOptions) {
     NSMutableArray *prices = [NSMutableArray new];
-    for (GMSFuelPrice *p in place.fuelOptions.prices) {
+    for (GMSPlaceFuelPrice *p in place.fuelOptions.fuelPrices) {
       NSMutableDictionary *pd = [NSMutableDictionary new];
       pd[@"type"] = @(p.type).stringValue;
       if (p.price) {
@@ -258,7 +246,7 @@
         pd[@"priceUnits"] = [@(p.price.units) stringValue];
         pd[@"priceNanos"] = @(p.price.nanos);
       }
-      if (p.updateTime) pd[@"updateTime"] = @(p.updateTime.timeIntervalSince1970 * 1000);
+      if (p.lastUpdateTime) pd[@"updateTime"] = @(p.lastUpdateTime.timeIntervalSince1970 * 1000);
       [prices addObject:pd];
     }
     m[@"fuelOptions"] = @{ @"fuelPrices": prices };
@@ -267,13 +255,13 @@
     NSMutableDictionary *ev = [NSMutableDictionary new];
     ev[@"connectorCount"] = @(place.evChargeOptions.connectorCount);
     NSMutableArray *aggs = [NSMutableArray new];
-    for (GMSConnectorAggregation *a in place.evChargeOptions.connectorAggregations) {
+    for (GMSPlaceConnectorAggregation *a in place.evChargeOptions.connectorAggregations) {
       NSMutableDictionary *am = [NSMutableDictionary new];
       am[@"type"] = @(a.type).stringValue;
-      am[@"maxChargeRateKw"] = @(a.maxChargeRateKw);
+      am[@"maxChargeRateKw"] = @(a.maxChargeRateKW);
       am[@"count"] = @(a.count);
-      if (a.availableCount) am[@"availableCount"] = a.availableCount;
-      if (a.outOfServiceCount) am[@"outOfServiceCount"] = a.outOfServiceCount;
+      am[@"availableCount"] = @(a.availableCount);
+      am[@"outOfServiceCount"] = @(a.outOfServiceCount);
       [aggs addObject:am];
     }
     ev[@"connectorAggregations"] = aggs;

@@ -24,21 +24,31 @@
 - (void)initialize:(NSString *)apiKey
            resolve:(RCTPromiseResolveBlock)resolve
             reject:(RCTPromiseRejectBlock)reject {
-  @synchronized (self) {
-    if (apiKey == nil || apiKey.length == 0) {
-      reject(@"INVALID_REQUEST", @"apiKey is required", nil);
-      return;
-    }
-    if (_initializedKey == nil) {
-      [GMSPlacesClient provideAPIKey:apiKey];
-      _initializedKey = [apiKey copy];
-    } else if (![_initializedKey isEqualToString:apiKey]) {
-      reject(@"INVALID_REQUEST",
-             @"Places already initialized with a different API key", nil);
-      return;
-    }
-    resolve(nil);
+  if (apiKey == nil || apiKey.length == 0) {
+    reject(@"INVALID_REQUEST", @"apiKey is required", nil);
+    return;
   }
+  // GMSPlacesClient APIs must be called on the main thread; TurboModule
+  // methods run on a background queue.
+  dispatch_async(dispatch_get_main_queue(), ^{
+    @synchronized (self) {
+      if (self->_initializedKey == nil) {
+        @try {
+          [GMSPlacesClient provideAPIKey:apiKey];
+        } @catch (NSException *e) {
+          reject(@"INVALID_REQUEST",
+                 e.reason ?: @"Failed to initialize Google Places SDK", nil);
+          return;
+        }
+        self->_initializedKey = [apiKey copy];
+      } else if (![self->_initializedKey isEqualToString:apiKey]) {
+        reject(@"INVALID_REQUEST",
+               @"Places already initialized with a different API key", nil);
+        return;
+      }
+      resolve(nil);
+    }
+  });
 }
 
 - (void)createSessionToken:(RCTPromiseResolveBlock)resolve
@@ -112,16 +122,18 @@
     autoReq.sessionToken = tok;
   }
 
-  [[GMSPlacesClient sharedClient]
-    fetchAutocompleteSuggestionsFromRequest:autoReq
-                                   callback:^(NSArray<GMSAutocompleteSuggestion *> *suggestions,
-                                              NSError *error) {
-    if (error != nil) {
-      reject([self codeForError:error], error.localizedDescription, error);
-      return;
-    }
-    resolve([PlacesPredictionMapper toArray:suggestions ?: @[]]);
-  }];
+  dispatch_async(dispatch_get_main_queue(), ^{
+    [[GMSPlacesClient sharedClient]
+      fetchAutocompleteSuggestionsFromRequest:autoReq
+                                     callback:^(NSArray<GMSAutocompleteSuggestion *> *suggestions,
+                                                NSError *error) {
+      if (error != nil) {
+        reject([self codeForError:error], error.localizedDescription, error);
+        return;
+      }
+      resolve([PlacesPredictionMapper toArray:suggestions ?: @[]]);
+    }];
+  });
 }
 
 - (void)fetchPlace:(NSDictionary *)request
@@ -163,24 +175,24 @@
   GMSFetchPlaceRequest *req = [[GMSFetchPlaceRequest alloc]
     initWithPlaceID:placeId placeProperties:sdkProps sessionToken:tok];
 
-  NSString *regionCode = request[@"regionCode"];
-  if ([regionCode isKindOfClass:NSString.class]) req.regionCode = regionCode;
-
-  __weak typeof(self) weakSelf = self;
-  [[GMSPlacesClient sharedClient]
-    fetchPlaceWithRequest:req
-                 callback:^(GMSPlace *place, NSError *error) {
-    if (error != nil) {
-      reject([weakSelf codeForError:error], error.localizedDescription, error);
-      return;
-    }
-    if (place == nil) {
-      reject(@"API_ERROR", @"Place not found", nil);
-      return;
-    }
-    if (sessionTokenId != nil) [weakSelf->_tokens clear:sessionTokenId];
-    resolve([PlacesPlaceMapper toDict:place requested:requested]);
-  }];
+  __weak __typeof__(self) weakSelf = self;
+  dispatch_async(dispatch_get_main_queue(), ^{
+    [[GMSPlacesClient sharedClient]
+      fetchPlaceWithRequest:req
+                   callback:^(GMSPlace *place, NSError *error) {
+      __strong __typeof__(self) strongSelf = weakSelf;
+      if (error != nil) {
+        reject([strongSelf codeForError:error], error.localizedDescription, error);
+        return;
+      }
+      if (place == nil) {
+        reject(@"API_ERROR", @"Place not found", nil);
+        return;
+      }
+      if (sessionTokenId != nil) [strongSelf->_tokens clear:sessionTokenId];
+      resolve([PlacesPlaceMapper toDict:place requested:requested]);
+    }];
+  });
 }
 
 // ---- helpers ----
@@ -194,7 +206,7 @@
   return YES;
 }
 
-- (id<GMSPlaceLocationOption>)locationOptionFromDict:(NSDictionary *)dict
+- (id<GMSPlaceLocationBias, GMSPlaceLocationRestriction>)locationOptionFromDict:(NSDictionary *)dict
                                                 error:(RCTPromiseRejectBlock)reject {
   NSString *type = dict[@"type"];
   if ([@"circle" isEqualToString:type]) {

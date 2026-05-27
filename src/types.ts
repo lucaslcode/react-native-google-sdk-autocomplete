@@ -42,7 +42,6 @@ export type FetchPlaceRequest = {
   placeId: string;
   fields: PlaceField[];
   sessionToken?: string;
-  regionCode?: string;
 };
 
 export type AddressComponent = {
@@ -65,8 +64,6 @@ export type TimeOfWeek = {
   day: number;
   hour: number;
   minute: number;
-  date?: { year: number; month: number; day: number };
-  truncated?: boolean;
 };
 
 export type OpeningHoursPeriod = {
@@ -77,7 +74,6 @@ export type OpeningHoursPeriod = {
 export type OpeningHours = {
   periods?: OpeningHoursPeriod[];
   weekdayText?: string[];
-  type?: string;
 };
 
 export type AuthorAttribution = {
@@ -90,8 +86,6 @@ export type Review = {
   text?: string;
   originalText?: string;
   rating?: number;
-  publishTime?: number;
-  relativePublishTimeDescription?: string;
   authorAttribution?: AuthorAttribution;
 };
 
@@ -160,14 +154,11 @@ export type Place = {
   id?: string;
   displayName?: string;
   formattedAddress?: string;
-  shortFormattedAddress?: string;
   addressComponents?: AddressComponent[];
   location?: LatLng;
   viewport?: Viewport;
   plusCode?: PlusCode;
   types?: string[];
-  primaryType?: string;
-  primaryTypeDisplayName?: string;
   businessStatus?: BusinessStatus;
   rating?: number;
   userRatingCount?: number;
@@ -175,14 +166,13 @@ export type Place = {
   websiteUri?: string;
   googleMapsUri?: string;
   iconMaskUrl?: string;
+  /** Hex color string, e.g. "#909CE1". */
   iconBackgroundColor?: string;
   internationalPhoneNumber?: string;
-  nationalPhoneNumber?: string;
   utcOffsetMinutes?: number;
   openingHours?: OpeningHours;
   currentOpeningHours?: OpeningHours;
   secondaryOpeningHours?: OpeningHours[];
-  currentSecondaryOpeningHours?: OpeningHours[];
   editorialSummary?: string;
   reviews?: Review[];
   accessibilityOptions?: AccessibilityOptions;
@@ -218,7 +208,6 @@ export type PlaceField =
   | 'id'
   | 'addressComponents'
   | 'formattedAddress'
-  | 'shortFormattedAddress'
   | 'location'
   | 'plusCode'
   | 'types'
@@ -228,13 +217,9 @@ export type PlaceField =
   | 'googleMapsUri'
   | 'iconBackgroundColor'
   | 'iconMaskUrl'
-  | 'primaryType'
-  | 'primaryTypeDisplayName'
   | 'utcOffsetMinutes'
   | 'currentOpeningHours'
-  | 'currentSecondaryOpeningHours'
   | 'internationalPhoneNumber'
-  | 'nationalPhoneNumber'
   | 'openingHours'
   | 'secondaryOpeningHours'
   | 'priceLevel'

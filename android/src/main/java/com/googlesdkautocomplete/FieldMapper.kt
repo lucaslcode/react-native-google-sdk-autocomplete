@@ -7,7 +7,6 @@ internal object FieldMapper {
     "id" to Place.Field.ID,
     "addressComponents" to Place.Field.ADDRESS_COMPONENTS,
     "formattedAddress" to Place.Field.FORMATTED_ADDRESS,
-    "shortFormattedAddress" to Place.Field.SHORT_FORMATTED_ADDRESS,
     "location" to Place.Field.LOCATION,
     "plusCode" to Place.Field.PLUS_CODE,
     "types" to Place.Field.TYPES,
@@ -17,13 +16,11 @@ internal object FieldMapper {
     "googleMapsUri" to Place.Field.GOOGLE_MAPS_URI,
     "iconBackgroundColor" to Place.Field.ICON_BACKGROUND_COLOR,
     "iconMaskUrl" to Place.Field.ICON_MASK_URL,
-    "primaryType" to Place.Field.PRIMARY_TYPE,
-    "primaryTypeDisplayName" to Place.Field.PRIMARY_TYPE_DISPLAY_NAME,
     "utcOffsetMinutes" to Place.Field.UTC_OFFSET,
     "currentOpeningHours" to Place.Field.CURRENT_OPENING_HOURS,
-    "currentSecondaryOpeningHours" to Place.Field.CURRENT_SECONDARY_OPENING_HOURS,
+    // iOS exposes only one phone number (international format), so we expose
+    // just the international number for cross-platform parity.
     "internationalPhoneNumber" to Place.Field.INTERNATIONAL_PHONE_NUMBER,
-    "nationalPhoneNumber" to Place.Field.NATIONAL_PHONE_NUMBER,
     "openingHours" to Place.Field.OPENING_HOURS,
     "secondaryOpeningHours" to Place.Field.SECONDARY_OPENING_HOURS,
     "priceLevel" to Place.Field.PRICE_LEVEL,

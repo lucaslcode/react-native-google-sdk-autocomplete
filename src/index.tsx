@@ -112,7 +112,6 @@ async function fetchPlace(request: FetchPlaceRequest): Promise<Place> {
     placeId: request.placeId,
     fields: request.fields,
     sessionToken: request.sessionToken,
-    regionCode: request.regionCode,
   });
   return result as Place;
 }

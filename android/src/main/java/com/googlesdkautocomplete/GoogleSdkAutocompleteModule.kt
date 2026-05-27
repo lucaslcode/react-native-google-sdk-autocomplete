@@ -112,14 +112,12 @@ class GoogleSdkAutocompleteModule(reactContext: ReactApplicationContext) :
       val requested = jsFields.toSet()
 
       val sessionTokenId = request.getString("sessionToken")
-      val regionCode = if (request.hasKey("regionCode")) request.getString("regionCode") else null
 
       val reqBuilder = FetchPlaceRequest.builder(placeId, sdkFields)
       sessionTokenId?.let { id ->
         val tok = tokens.get(id) ?: throw SessionTokenNotFound(id)
         reqBuilder.setSessionToken(tok)
       }
-      regionCode?.let { reqBuilder.setRegionCode(it) }
       val req = reqBuilder.build()
 
       placesClient.fetchPlace(req)
