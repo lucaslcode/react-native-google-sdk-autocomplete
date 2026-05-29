@@ -11,7 +11,9 @@ export interface Spec extends TurboModule {
   findAutocompletePredictions(
     request: CodegenTypes.UnsafeObject
   ): Promise<CodegenTypes.UnsafeObject[]>;
-  fetchPlace(request: CodegenTypes.UnsafeObject): Promise<CodegenTypes.UnsafeObject>;
+  fetchPlace(
+    request: CodegenTypes.UnsafeObject
+  ): Promise<CodegenTypes.UnsafeObject>;
 }
 
 export default TurboModuleRegistry.getEnforcing<Spec>('GoogleSdkAutocomplete');

@@ -224,7 +224,8 @@ function PlaceDetails({ place, onBack }: { place: Place; onBack: () => void }) {
       )}
       {place.location && (
         <Text style={styles.detailLine}>
-          {place.location.latitude.toFixed(5)}, {place.location.longitude.toFixed(5)}
+          {place.location.latitude.toFixed(5)},{' '}
+          {place.location.longitude.toFixed(5)}
         </Text>
       )}
     </ScrollView>
@@ -266,7 +267,10 @@ const styles = StyleSheet.create({
   hint: { color: '#666', marginTop: 8 },
   busyOverlay: {
     position: 'absolute',
-    top: 0, left: 0, right: 0, bottom: 0,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'rgba(255,255,255,0.4)',
