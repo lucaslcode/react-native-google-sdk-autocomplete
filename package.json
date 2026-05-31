@@ -1,6 +1,6 @@
 {
   "name": "react-native-google-sdk-autocomplete",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "React Native plugin wrapping the native Google Places SDK (Android + iOS) for programmatic Place Autocomplete and Place Details",
   "main": "./lib/module/index.js",
   "types": "./lib/typescript/src/index.d.ts",
